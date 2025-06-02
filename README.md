@@ -27,3 +27,11 @@ Our pipeline requires just a CPU! 😻
  ``` python run_SPARC.py --input_dir=<path to data folder> --dataset_name=<COCO2014, VOC2007, or NUSWIDE> --model_type=<ViT-L14336px, ViT-L14, ViT-B16, ViT-B32, RN50x64, RN50x16, RN50x4, RN101, or RN50> --output_prefix=<prefix for output filenames> ```
 
 The script will produce a .csv file with mAPs, and a .pkl file with both mAPs and individual class APs.
+
+## Coming soon...
+
+Link to CVPR camera-ready version of our paper
+
+Code for noise model analysis
+
+Code for ablations and other results
