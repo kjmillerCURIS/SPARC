@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 import copy
 import numpy as np
 import pickle
@@ -9,8 +10,8 @@ from tqdm import tqdm
 
 
 #minor classname remappings for COCO dataset
-COCO_VENKATESH_CLASSNAMES_RENAMER = {'food bowl' : 'bowl'}
-COCO_KEVIN_CLASSNAMES_RENAMER = {'motor bike' : 'motorcycle', 'aeroplane' : 'airplane'}
+COCO_COMPOUND_CLASSNAMES_RENAMER = {'food bowl' : 'bowl'}
+COCO_SINGLETON_CLASSNAMES_RENAMER = {'motor bike' : 'motorcycle', 'aeroplane' : 'airplane'}
 
 
 def average_precision(output, target):
@@ -68,7 +69,7 @@ def stringmatch_to_compoundprompt(classnames, compoundprompt, is_voc=False):
 def check_classname2compoundprompts(classname2compoundprompts, classnames):
     for classname in sorted(classnames):
         if len(classname2compoundprompts[classname]) < 4:
-            print('CAUTION: "%s": %s'%(classname, ', '.join(['"%s"'%(p) for p in classname2compoundprompts[classname]])))
+            print('Low number of compound prompts for class "%s": %s'%(classname, ', '.join(['"%s"'%(p) for p in classname2compoundprompts[classname]])))
 
 
 def load_data(input_dir, dataset_name, model_type):
@@ -87,8 +88,8 @@ def load_data(input_dir, dataset_name, model_type):
 
     if is_coco:
         #class renaming
-        d_ensemble_single['classnames'] = [(COCO_KEVIN_CLASSNAMES_RENAMER[c] if c in COCO_KEVIN_CLASSNAMES_RENAMER else c) for c in d_ensemble_single['classnames']]
-        d_simple_single_and_compound['simple_single_and_compound_prompts'][:len(d_ensemble_single['classnames'])] = [(COCO_VENKATESH_CLASSNAMES_RENAMER[c] if c in COCO_VENKATESH_CLASSNAMES_RENAMER else c) for c in d_simple_single_and_compound['simple_single_and_compound_prompts'][:len(d_ensemble_single['classnames'])]]
+        d_ensemble_single['classnames'] = [(COCO_SINGLETON_CLASSNAMES_RENAMER[c] if c in COCO_SINGLETON_CLASSNAMES_RENAMER else c) for c in d_ensemble_single['classnames']]
+        d_simple_single_and_compound['simple_single_and_compound_prompts'][:len(d_ensemble_single['classnames'])] = [(COCO_COMPOUND_CLASSNAMES_RENAMER[c] if c in COCO_COMPOUND_CLASSNAMES_RENAMER else c) for c in d_simple_single_and_compound['simple_single_and_compound_prompts'][:len(d_ensemble_single['classnames'])]]
 
     #get classnames, gts, compoundprompts, double-check everything
     classnames = d_ensemble_single['classnames']
@@ -199,7 +200,7 @@ def do_PCA_oneclass(*scores_list, use_avg_for_sign=False, normalize_direction_by
     my_pca.fit(scores_arr)
     direction = my_pca.components_[0,:]
     if not (np.all(direction > 0) or np.all(direction < 0)):
-        print(str(direction) + '!')
+        print('PCA direction with some negative weights: ' + str(direction))
 
     if use_avg_for_sign:
         if np.mean(direction) < 0.0:
@@ -239,12 +240,12 @@ def run_SPARC(input_dir, dataset_name, model_type, output_prefix):
 
     ensemble_single_uncalibrated_mAP = np.mean([ensemble_single_uncalibrated_APs[classname] for classname in classnames])
 
-    print('normalization...')
+    print('normalize...')
     ensemble_single_cossims, compound_cossims = calibrate_data(ensemble_single_cossims, simple_single_cossims, compound_cossims)
 
     #get the scores, each as dict mapping from classname to 1D array
     #also get the uniform averaging scores
-    print('scores...')
+    print('rank and fuse...')
     ensemble_single_scores = {}
     allpcawsing_scores = {}
     allpcawsing_avg_scores = {}
@@ -265,13 +266,13 @@ def run_SPARC(input_dir, dataset_name, model_type, output_prefix):
     allpcawsing_avg_mAP = np.mean([allpcawsing_avg_APs[classname] for classname in classnames])
 
     #save results
-    print('RESULTS...')
+    print('saving results...')
     results_pkl_filename, results_csv_filename = output_prefix + '.pkl', output_prefix + '.csv'
     f = open(results_csv_filename, 'w')
     f.write('method,mAP\n')
     results = {}
-    append_to_results('CLIP'%(baseline_name), ensemble_single_uncalibrated_mAP, ensemble_single_uncalibrated_APs, results, f)
-    append_to_results('Normalized CLIP'%(baseline_name), ensemble_single_mAP, ensemble_single_APs, results, f)
+    append_to_results('CLIP (baseline)', ensemble_single_uncalibrated_mAP, ensemble_single_uncalibrated_APs, results, f)
+    append_to_results('Normalize only', ensemble_single_mAP, ensemble_single_APs, results, f)
     append_to_results('SPARC', allpcawsing_avg_mAP, allpcawsing_avg_APs, results, f)
     f.close()
     with open(results_pkl_filename, 'wb') as f:
@@ -281,10 +282,10 @@ def run_SPARC(input_dir, dataset_name, model_type, output_prefix):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run SPARC pipeline given pre-computed CLIP cosine similarities.")
     
-    parser.add_argument("input_dir", type=str, help="Path to directory with pre-computed CLIP cosine similarities")
-    parser.add_argument("dataset_name", type=str, help="Dataset name (e.g. COCO2014, VOC2007, NUSWIDE)")
-    parser.add_argument("model_type", type=str, help="CLIP model architecture type (ViT-L14336px, ViT-L14, ViT-B32, RN50x64, RN50x16, RN50x4, RN101, RN50)")
-    parser.add_argument("output_prefix", type=str, help="Prefix for output file (.csv has mAPs, .pkl also has individual class APs)")
+    parser.add_argument("--input_dir", type=str, help="Path to directory with pre-computed CLIP cosine similarities")
+    parser.add_argument("--dataset_name", type=str, help="Dataset name (e.g. COCO2014, VOC2007, NUSWIDE)")
+    parser.add_argument("--model_type", type=str, help="CLIP model architecture type (ViT-L14336px, ViT-L14, ViT-B32, RN50x64, RN50x16, RN50x4, RN101, RN50)")
+    parser.add_argument("--output_prefix", type=str, help="Prefix for output file (.csv has mAPs, .pkl also has individual class APs)")
     
     args = parser.parse_args()
     run_SPARC(args.input_dir, args.dataset_name, args.model_type, args.output_prefix)

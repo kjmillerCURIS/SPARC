@@ -1,8 +1,28 @@
-# SPARC
-SPARC: Score Prompting and Adaptive Fusion for Zero-Shot Multi-Label Recognition in Vision-Language Models
+# ✨SPARC✨
 
-Published in CVPR 2025. Code coming soon.
+**✨SPARC✨: Score Prompting and Adaptive Fusion for Zero-Shot Multi-Label Recognition in Vision-Language Models**
+
+Published in CVPR 2025.
 
 Arxiv version: https://arxiv.org/abs/2502.16911
 
 CVPR camera-ready version: Coming soon.
+
+## Install
+
+After cloning our repo, please install numpy and sklearn, e.g.
+
+```pip install scipy ```
+```pip install scikit-learn ```
+
+## Data
+
+For ease of use, we have provided all necessary [CLIP cosine similarities](https://drive.google.com/drive/folders/1jluZ7tJq5LUceptu4mBuAjppzs8VFVFz?usp=sharing) for reproducing our main results (Tab. 2 in our paper). We computed these similarities using [these](https://github.com/kjmillerCURIS/dualcoopstarstar/blob/main/cooccurrence_correction_experiments/compute_cossims_test_noaug.py) [codes](https://github.com/kjmillerCURIS/dualcoopstarstar/blob/main/cooccurrence_correction_experiments/compute_cossims_test_noaug_arbitrary_prompts.py), although the process involved is fairly standard (and described in our paper). The data files also include image filenames, ground-truth labels, classnames, and compound prompts.
+
+## Run
+
+Our pipeline requires just a CPU! 😸
+
+ ``` python run_SPARC.py --input_dir=<path to data folder> --dataset_name=<COCO2014, VOC2007, or NUSWIDE> --model_type=<ViT-L14336px, ViT-L14, ViT-B16, ViT-B32, RN50x64, RN50x16, RN50x4, RN101, or RN50> --output_prefix=<prefix for output filenames> ```
+
+The script will produce a .csv file with mAPs, and a .pkl file with both mAPs and individual class APs.
