@@ -13,6 +13,7 @@ CVPR camera-ready version: Coming soon.
 After cloning our repo, please install numpy and sklearn, e.g.
 
 ```pip install scipy ```
+
 ```pip install scikit-learn ```
 
 ## Data
