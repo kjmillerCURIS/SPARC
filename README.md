@@ -2,11 +2,7 @@
 
 **✨SPARC✨: Score Prompting and Adaptive Fusion for Zero-Shot Multi-Label Recognition in Vision-Language Models**
 
-Published in CVPR 2025.
-
-Arxiv version: https://arxiv.org/abs/2502.16911
-
-CVPR camera-ready version: Coming soon.
+[Published in CVPR 2025](https://openaccess.thecvf.com/content/CVPR2025/papers/Miller_SPARC_Score_Prompting_and_Adaptive_Fusion_for_Zero-Shot_Multi-Label_Recognition_CVPR_2025_paper.pdf)
 
 ## Install
 
