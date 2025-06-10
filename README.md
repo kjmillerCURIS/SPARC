@@ -26,8 +26,6 @@ The script will produce a .csv file with mAPs, and a .pkl file with both mAPs an
 
 ## Coming soon...
 
-Link to CVPR camera-ready version of our paper
-
 Code for noise model analysis
 
 Code for ablations and other results
